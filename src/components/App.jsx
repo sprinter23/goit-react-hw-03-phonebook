@@ -23,23 +23,36 @@ export class App extends Component {
   addContact = ({ name, number }) => {
     const { contacts } = this.state;
 
+    if (
+      contacts.find(
+        contact => contact.name.toLowerCase() === name.toLowerCase()
+      )
+    ) {
+      return alert(`${name} is already in contacts.`);
+    }
+
     const addContact = {
-      id: nanoid(5),
+      id: nanoid(),
       name,
       number,
     };
 
-    if (
-      contacts.find(
-        contact => contact.name.toLowerCase() === addContact.name.toLowerCase()
-      )
-    ) {
-      return alert(`${addContact.name} is already in contacts.`);
-    }
-
     this.setState(({ contacts }) => ({
       contacts: [addContact, ...contacts],
     }));
+  };
+
+  filterContacts = e => {
+    this.setState({ filter: e.currentTarget.value });
+  };
+
+  getFilteredContacts = () => {
+    const { filter, contacts } = this.state;
+    const normalized = filter.toLocaleLowerCase();
+
+    return contacts.filter(contact =>
+      contact.name.toLocaleLowerCase().includes(normalized)
+    );
   };
 
   deleteContact = contactId => {
@@ -48,16 +61,9 @@ export class App extends Component {
     }));
   };
 
-  filterContacts = e => {
-    this.setState({ filter: e.currentTarget.value });
-  };
-
   render() {
-    const { filter } = this.state;
-    const normalized = this.state.filter.toLocaleLowerCase();
-    const renderContacts = this.state.contacts.filter(contact =>
-      contact.name.toLocaleLowerCase().includes(normalized)
-    );
+    const { filter, contacts } = this.state;
+    const filteredContacts = this.getFilteredContacts();
 
     return (
       <Container>
@@ -65,12 +71,16 @@ export class App extends Component {
         <ContactForm onSubmit={this.addContact} />
 
         <TitleContacts>Contacts</TitleContacts>
-
-        <Filter value={filter} onFilterContacts={this.filterContacts} />
-        <ContactList
-          contacts={renderContacts}
-          onDeleteContact={this.deleteContact}
-        />
+        {contacts.length > 0 && (
+          <>
+            <Filter value={filter} onFilterContacts={this.filterContacts} />
+            <ContactList
+              contacts={filteredContacts}
+              onDeleteContact={this.deleteContact}
+            />
+          </>
+        )}
+        {contacts.length === 0 && <p>There is no contacts</p>}
       </Container>
     );
   }
